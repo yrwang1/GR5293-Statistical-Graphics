@@ -1,0 +1,707 @@
+---
+title: "GR5293 Comunity Contribution"
+author: "Yarong Wang (yw3598), Qian Zhang (qz2416)"
+date: "2022/3/23"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
+```
+
+# R Shiny and Interactive Map Tutorial
+
+## 1. What is R Shiny?
+
+Shiny is an R package that helps you easily host stand-alone web applications or build dashboards directly using R. The powerful web framework it provides can turn your analysis into interactive web applications without requiring your HTML, CSS, or JavaScript knowledge.
+
+## 2. How to create an R shiny app?
+
+### **- Step 1: Installation**
+
+```{r}
+#Install the library
+install.packages("shiny")
+
+#Load the library
+library(shiny)
+```
+
+### **- Step 2: Create Files for Shiny App**
+
+There are two basic components for shiny apps: 
+
+- **User interface** that defines how your app **look**
+
+- **Server function** that defines how your app **work**
+
+You can either choose to include both of these parts in a single file (app.R) or separate them into two files (ui.R and server.R) and store them in the same folder.
+
+Here is the minimum needed structure of app.R that creates an empty app.
+
+```r
+ui <- fluidPage()
+
+server <- function(input, output, session) {}
+
+shinyApp(ui, server)
+```
+
+### **- Step 3: Add UI Components**
+### (1) Layout
+A variety of layout features are available by placing elements in the fluidPage function.
+
+#### **1). Sidebar Layout**: 
+place a sidebarPanel() of inputs alongside a mainPanel() output content inside the sidebarLayout() function.
+```{r}
+fluidPage(
+  titlePanel("This is a basic siderbar layout"),
+  #basic siderbar layout
+  sidebarLayout(
+    sidebarPanel("sidebar panel"),
+    mainPanel("main panel")
+  )
+)
+```
+
+#### **2). Navbar Pages**: 
+Creating applications with multiple top-level components using the navbarPage() function.
+```{r}
+navbarPage("This is an example of Navbar Pages",
+  tabPanel("Component 1"),
+  tabPanel("Component 2"),
+  navbarMenu("See More",
+    tabPanel("Sub-Component A"),
+    tabPanel("Sub-Component B")),
+  br(),
+  br()
+)
+```
+
+#### **3). Segmenting layouts: **
+
+Creating **Navlists by navlistPanel()** functions and **Tabsets by tabsetPanel()** functions
+
+Example of Navlists:
+```{r}
+fluidPage(
+  titlePanel("This is an example of Navlists"),
+  navlistPanel(
+    "Header A",
+    tabPanel("Component 1"),
+    tabPanel("Component 2"),
+  )
+)
+```
+
+#### **4). Grid layout**: 
+Rows are created by the fluidRow() function, and columns can be included by the column() function which is possible to modify the width, align and offset the position of columns for customization and achieve more precise control over the location of UI elements. 
+
+#### **5). More details of application layout can be found** [here](https://shiny.rstudio.com/articles/layout-guide.html)
+
+### (2) HTML Content and Images
+
+Content can be added in multiple formats with functions below, and the img() function `img(src = "#here is the file name or link", height = number, width = number)` can place image files in your app. The image file must be in a folder named www in the same directory as the ui.R. The folder www is a great place to put images, style sheets, and other things the browser will need to build the web components of your Shiny app.
+
+```{r}
+fluidPage(
+  titlePanel("My Shiny App - HTML content and image example"),
+  sidebarLayout(
+    sidebarPanel(h4("Example of Image"),
+      img(src = "https://www.analyticsvidhya.com/wp-content/uploads/2016/10/shiny.png", height = 72, width = 110),
+      p("Image source from online, see",
+        a("here.", href = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.analyticsvidhya.com%2Fblog%2F2016%2F10%2Fcreating-interactive-data-visualization-using-shiny-app-in-r-with-examples%2F&psig=AOvVaw2R1hXPhEGenJ1vKAaW9pms&ust=1648505857131000&source=images&cd=vfe&ved=0CAsQjRxqFwoTCICK6oqp5_YCFQAAAAAdAAAAABAI"))),
+    mainPanel(
+      p("p() creates a paragraph of text. Supply a style attribute to change the format of the entire paragraph.", style = "font-family: 'times'; font-si16pt"),
+      strong("strong() makes bold text."),
+      em("em() creates italicized (i.e, emphasized) text."),
+      br(),
+      code("code displays your text similar to computer code"),
+      br(),
+      div("div creates segments of text with a similar style. The color of the division of text can be changed by 'style = color:color' to div", style = "color:blue"),
+      p("span does the same thing as div, but it works with",
+        span("groups of words", style = "color:red"),
+        "that appear inside a paragraph.")
+    )
+  )
+)
+```
+
+### (3) Add Control Widgets
+A widget is a web element that the users can interact and engage with. The first two arguments for each widget function are:
+
+- A Name for the widget (a character string): Used to access the widget’s value, but the user will not see this name. 
+
+- A label (a character string or an empty string ““): This label will appear with the widget in your app.
+
+Some examples of different types of widgets:
+
+#### **1). Action button**
+```r
+actionButton(inputId, label, icon = NULL)
+```
+e.g.,
+```{r}
+ui1<-fluidPage(
+  wellPanel(
+    h3("Action button"),
+    actionButton("action", label = "Action test"),
+    hr(),
+    p("Current Number of Actions you've made:", style = "color:#888888;"),
+    verbatimTextOutput("actionO")
+  )
+)
+
+server1<-function(input, output) {
+  output$actionO=renderPrint({ input$action[1] })
+}
+shinyApp(ui1, server1)
+```
+
+#### **2). Checkbox group**
+```r
+checkboxGroupInput(inputId, label, choices, selected = NULL)
+```
+e.g.,
+```{r}
+shinyApp(ui=fluidPage(
+  checkboxGroupInput("checkGroup", label = h3("Checkbox group"), 
+    choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3),
+    selected = 1),
+  hr(),
+  fluidRow(column(3, "Choices you are checking",
+                  verbatimTextOutput("value"))),
+),
+server=function(input, output) {
+  output$value <- renderPrint({ input$checkGroup })
+})
+```
+
+#### **3). Select box**
+```r
+selectInput(inputId, label, choices, selected = NULL, multiple = FALSE, selectize = TRUE)
+```
+e.g.,
+```{r}
+shinyApp(ui=fluidPage(
+  selectInput("select", label = h3("Select box"), 
+    choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
+    selected = 1),
+  hr(),
+  fluidRow(column(3, "Boxes you are selecting",
+                  verbatimTextOutput("value"))),
+),
+server=function(input, output) {
+  output$value <- renderPrint({ input$select })
+})
+```
+
+#### **4). Slider and Slider Range**
+```r
+sliderInput(inputId, label, min, max, value, step = NULL, round = FALSE, format = "#,##0.#####", locale = "us", ticks = TRUE, animate = FALSE)
+```
+e.g.,
+```{r}
+shinyApp(ui=fluidPage(
+  fluidRow(
+    column(4, sliderInput("slider1", label = h3("Slider"), min = 0, 
+        max = 100, value = 50)
+    ),
+    column(4, sliderInput("slider2", label = h3("Slider Range"), min = 0, 
+        max = 100, value = c(30, 70))
+    )
+  ),
+  hr(),
+  fluidRow(
+    column(4, "Current value", verbatimTextOutput("value")),
+    column(4, "Current range", verbatimTextOutput("range"))
+  )
+),
+server=function(input, output) {
+  output$value <- renderPrint({ input$slider1 })
+  output$range <- renderPrint({ input$slider2 })
+})
+```
+
+#### **5). More examples of widgets can be found [here](https://shiny.rstudio.com/gallery/widget-gallery.html)**
+
+### **- Step 4: Display Reactive Output**
+render* () and *Output() functions work together to add R output to the UI. The reactive output can be displayed by two steps:
+
+#### (1) Add an R object to your user-interface ui.R.
+
+Shiny provides a family of functions that turn R objects into output for your user-interface, with each function creates a specific type of output:
+
+-`imageOutput(outputId, width, height, click, dblclick, hover, hoverDelay, hoverDelayType, brush, clickId, hoverId, inline)` for image
+
+-`plotOutput(outputId, width, height, click, dblclick, hover, hoverDelay, hoverDelayType, brush, clickId, hoverId, inline)` for plot
+
+-`verbatimTextOutput(outputId)` for text
+
+-`tableOutput(outputId)` for table
+
+-`textOutput(outputId, container, inline)` for text
+
+-`uiOutput(outputId, inline, container, …)` & `htmlOutputoutputId, inline, container, …)` for raw HTML
+
+Example:
+```r
+# Define UI for application that draws a histogram
+fluidPage(
+ numericInput(inputId = "n","Sample size", value = 25),
+ plotOutput(outputId = "hist")
+)
+```
+
+#### (2) Tell Shiny how to build the object in server.R. 
+
+The object will be reactive if the code that builds it calls a widget value, below are the render*() functions that corresponding to (1).
+
+-`renderImage(expr, env, quoted, deleteFile)` for images (saved as a link to a source file)
+
+-`renderPlot(expr, width, height, res, …, env, quoted, func)` for plots
+
+-`renderPrint(expr, env, quoted, func, width)` for any printed output
+
+-`renderTable(expr,…, env, quoted, func)` for data frame, matrix, other table like structures
+
+-`renderText(expr, env, quoted, func)` for character strings
+
+-`renderUI(expr, env, quoted, func)` for a Shiny tag object or HTML
+
+Example:
+```r
+# Define server logic required to draw a histogram
+function(input, output) {
+ output$hist <- renderPlot({hist(rnorm(input$n))})
+}
+```
+
+### **- Step 5: Deploy**
+To run your app, you can either run the code `runApp(getwd("the working directory where you stored the files"))` or press the "Run App" button.
+
+In order to enable others to access your app, you need to publish the app.
+
+#### Option 1
+
+- Create a free account on shinyapps.io. Get the name, token and secret information.
+
+- Install the rsconnect package using install.packages(), then deploy the app
+```r
+rsconnect::setAccountInfo(name='abc',
+                          token='def',
+                          secret='ghi')
+deployApp(account='dss')
+```
+#### Option 2
+
+Click the ‘Publish’ button at the top right corner and a window would pop up. Follow the instruction and deploy the app.
+
+## 3. Interactive Map 
+
+- **Dataset**
+
+The dataset we use in this section is released on the [NYC Open Data By Agency website](https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Current-Year-To-Date-/5uac-w243/data) and contains the historical record of the valid felony, misdemeanor, and violation crimes reported to the New York City Police Department (NYPD). Note that the csv file is very large and we decided to only take the complaint cases from 2020-03-01 to 2020-05-31 as an example. The codes below also work for the original dataset. 
+
+- **Preparation**
+
+Below are the packages required for this section, the code chunk will install them for you in case you are missing any of them
+```{r}
+if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
+if(!require(leaflet)) install.packages("leaflet", repos = "http://cran.us.r-project.org")
+if(!require(lubridate)) install.packages("lubridate", repos = "http://cran.us.r-project.org")
+if(!require(rgdal)) install.packages("rgdal", repos = "http://cran.us.r-project.org")
+if(!require(stringr)) install.packages("stringr", repos = "http://cran.us.r-project.org")
+if(!require(shiny)) install.packages("shiny", repos = "http://cran.us.r-project.org")
+```
+
+### 3.1 Interactive Map with leaflet
+
+There are various of packages for creating interactive maps in R. Here we are going to introduce the package **leaflet** that deals with data frames with latitude and longitude columns or the spatial objects (stands for points, lines, or polygons) of the sp or sf packages. 
+
+#### **(1). Interactive map with markers**
+
+Let's start with a basic map. **The step-by-step instructions for creating an interactive map are included in the comments below.** As mentioned before, our dataset is about the complaint cases happened in NYC. The first idea we came up with is to show each complaint case on the map of NYC and we can do so by adding markers to the map using the leaflet package. It is worth noting that the map would be very messy and crowded if we did so since there are tons of complaint cases. Therefore, we decided to display the complaints related to felony that happened in 2020-03-01 with the unique complaint id on the map as an example. 
+
+```{r}
+library(dplyr)
+library(lubridate)
+library(leaflet)
+
+# process crime data
+# we uploaded the sliced dataset to GitHub to avoid submitting csv files through Canvas
+complaint_his_raw = read.csv("https://raw.githubusercontent.com/QianZhang-Erica/5293-Contribution/main/NYPD_Complaint.csv")
+# as mentioned before, we need latitude or longitude values to draw the map using leaflet. Hence we need to remove cases without latitude or longitude values
+complaint = complaint_his_raw[!(is.na(complaint_his_raw$Latitude) &!is.na(complaint_his_raw$Longitude)),]
+# change the format of the date for further data manipulation
+complaint$date = as_date(complaint$CMPLNT_FR_DT, format = '%m/%d/%Y')
+
+# select the cases related to felony that happened in 2020-03-01
+selectComplaint = function(month, type){
+    complaint[(complaint$date == month & complaint$OFNS_DESC == type), ]
+}
+felony = selectComplaint('2020-03-01',"FELONY ASSAULT")
+
+# create a map widget by calling leaflet and the data used is felony
+# to better displays the complaints, we need to modify the map
+# we did this by adding layers to the map: 
+# SetView() sets the view of the map. We set the longitude and latitude of the map center and the zoom level as following in order to better display the map of NYC
+# addTiles() adds a tile layer from a map provider and by default, OpenStreetMap tiles are used. We can switch to other kinds of maps by using addProviderTiles() and the name of the provider can be found here: http://leaflet-extras.github.io/leaflet-providers/preview/ and https://github.com/leaflet-extras/leaflet-providers)
+# addMarkers() add markers to the map according to the longitude and latitude of the complaint cases and we set the label of the markers to be the unique complaint ids
+NYC_map_1 = leaflet(data = felony)  %>%
+          setView(lng = -73.935242, lat = 40.730610, zoom = 10) %>%
+          addTiles() %>%
+          addMarkers(~Longitude, ~Latitude, label=felony$CMPLNT_NUM)
+NYC_map_1
+```
+
+
+#### **(2). Interactive map with polygons**
+
+Under some circumstances, we might need to compare the number of complaints in different boroughs. As mentioned before, the map would be messy and crowded if we want to display all the cases happened from 2020-03-01 to 2020-05-31 in NYC. One way solve this problem is to treat the boroughs as polygons and color these polygons. In the following map, we colored the five boroughs of NYC from purple to yellow with the smallest number of complaints related to felony being purple and the largest number of complaint related to felony being yellow, and label that number on each borough so **it shows up when you move your mouse over the borough**.
+
+```{r}
+library(rgdal)
+library(stringr)
+
+# this time we need to display the cases by boroughs, therefore, we need to remove the cases that do not have information about boroughs
+complaint_poly = complaint_his_raw[!(is.na(complaint_his_raw$BORO_NM)),]
+complaint_poly$date = as_date(complaint_poly$CMPLNT_FR_DT, format = '%m/%d/%Y')
+# select the cases related to felony that happened from 2020-03-01 to 2020-05-31
+felony_poly = complaint_poly[(complaint_poly$OFNS_DESC == "FELONY ASSAULT"), ]
+
+# remove unused dataframes
+rm(complaint_his_raw)
+rm(complaint_poly)
+
+# count the number of complaints related to felony for different boroughs and calculate the logs for further color settings
+boros = unique(felony$BORO_NM)
+num_fel = c()
+for (i in 1:length(boros)){
+  res_num = nrow(felony_poly[felony_poly$BORO_NM==boros[i],])
+  num_fel = append(num_fel, res_num)
+}
+poly_df = data.frame("Boros" = boros, "ct" = num_fel, "lg" = log10(num_fel))
+
+# Since we treat the boroughs as polygons and want to color these polygons, we need the geographic information of the boroughs. The json file in the website https://data.beta.nyc/dataset/pediacities-nyc-neighborhoods/resource/35dd04fb-81b3-479b-a074-a27a37888ce7 is about the geographic information we need. As mentioned before, the leaflet package is able to deal with spatial objects of the sp or sf packages, we use readOGR() here to read the json file as sp objects.
+# we uploaded this json file to GitHub to avoid submitting json files through Canvas
+poly_info = readOGR("https://raw.githubusercontent.com/QianZhang-Erica/5293-Contribution/main/nyc%20boroughs.json", verbose=FALSE)
+
+# add the counts and log of counts we calculated before to the spatial data
+poly_df$Boros = str_to_title(poly_df$Boros)
+poly_ne = data.frame("Boros" = poly_info@data$borough)
+poly_ne = poly_ne %>% left_join(poly_df, by = "Boros")
+poly_info$ct = poly_ne$ct
+poly_info$lg =  poly_ne$lg
+
+# define the function that sets the colors of polygons
+poly_col = colorNumeric("viridis", NULL)
+
+# addPolygons() adds polygons to the map. By running help(addPolygons), we can see more detailed information about the meanings of different parameters. 
+# addLegend() adds the color legend to the map. Again, running help(addLegend) would give you more information about the parameters
+NYC_map_2 = leaflet(data = poly_info) %>%
+  addPolygons(stroke = FALSE, 
+              fillColor = ~poly_col(lg),
+              fillOpacity = 0.5, 
+              smoothFactor = 0.5,
+              label = ~paste0(borough, ": ", formatC(ct, big.mark = ","))) %>%
+  addLegend(pal = poly_col, values = ~lg, opacity = 1.0, labFormat = labelFormat(transform = function(x) round(10^x))) %>%
+          addTiles() %>%
+          setView(lng = -73.935242, lat = 40.730610, zoom = 10)
+NYC_map_2
+```
+
+Many other features or layers could be added to the map. More details could be found [here](https://rstudio.github.io/leaflet/)
+
+### 3.2 R Shiny and Interactive Map
+
+Now, let's integrate the leaflet package with R shiny. As mentioned before, render* () and *Output() functions work together to add R output to the UI. For leaflet, leafletOutput() is called in UI and renderLeaflet() is called in server.
+
+As we can see, the two maps above give us a good demonstration of our data. However, what if we want to display the complaints of 2020-03-01, 2020-03-05 and 2020-05-31? We can still do it by drawing a map for each date, but it would be exhausting to do so when the number of dates is large. Fortunately, we could use the control widgets of R shiny to solve this problem. 
+
+#### **- Interactive map with control widgets**
+
+In the following map, we **can select different date** and the map will show the complaints related to felony happened on that date in NYC. In this case, the valid date is from 2020-03-01 to 2020-05-31. If you want a larger time range, you can use the original dataset described before.
+
+```{r}
+library(shiny)
+
+# select the felony complaints from 2020-03-01 to 2020-05-31
+felony_w = complaint[(complaint$OFNS_DESC == "FELONY ASSAULT"), ]
+
+# select the felony complaints by date 
+selectDate =  function(month){
+    felony_w[(felony_w$date == month), ]
+}
+
+server_1 <- function(input, output) {
+  # renderLeaflet() returns a Leaflet map pbject
+  output$map <- renderLeaflet({
+        # use leaflet here to create static features of the map, which are the features that will not need to change a lot
+        leaflet() %>%
+        addTiles() %>%
+        setView(lng = -73.935242, lat = 40.730610, zoom = 10)
+    })
+  
+  # What we want to do with this map is to display the complaints cases happened in the date the user selects. In order to do this, we first need to select the cases of the date the user chose and display them on the map
+  
+  # we first need to create reactive expressions for the date the user chose
+  df_react_dt <- reactive({
+        selectDate(input$date)
+    })
+  
+  # We then need to create an observer to apply every change to the map. When the user choose a date, the map first needs to clear all the features about the previous selected date and then display the features of this date
+  observe({
+    # use leafletProxy() here to modifies the map that is already running, which means to manage the dynamic features
+    leafletProxy("map", data = felony_w) %>%
+      # clearShapes() and clearMarkers() remove features from the map
+      clearShapes() %>%
+      clearMarkers() %>%
+      addTiles() %>%
+      setView(lng = -73.935242, lat = 40.730610, zoom = 10)
+    
+    # if a date is selected
+    if (input$date){
+      # addMarkers() adds markers to the map
+      leafletProxy("map", data = df_react_dt()) %>%
+        addMarkers(
+          lng=~Longitude,
+          lat=~Latitude,
+        )
+    }
+  })}
+
+# design the ui
+ui_1 = fluidPage(
+  # creates a calender for the user to click on to select the date
+  dateInput("date", label = "Date", value ="2020-03-01"),
+  # create the UI element for the map
+  leafletOutput("map", width="100%", height=620)
+  # call helper functions for more details about the parameters
+  )
+
+# set the size of the output to avoid scrolling  
+shinyApp(ui_1, server_1, options = list(height = 700))
+```
+
+Again, there are plenty of control widgets that could be added to the map. It really depends on how you want to display your data. More details could be found [here](https://rstudio.github.io/leaflet/)
+
+### 3.3 Putting It All Together
+
+Finally, it's time to bring all the features described above together. 
+
+So far we have explored the interactive map using the leaflet and shiny packages for the felony cases from 2020-03-01 to 2020-05-31. For our dataset, it contains the complaint cases of eight types of crimes. Again, we can use control widgets to avoid drawing eight maps for those eight types of crimes. Of course, we could use the select box in this case. However, as we mentioned before, the type of control widgets chosen really depends on how we would like to display our data. In reality, we might need to compare different crimes that happened in the same date. In order to incorporate more functionalities, we chose to use checkbox. 
+
+In addition, the location of the control widget is also important. In the previous case, the date selector is above the NYC map and we have to set the size of the Shiny app object to avoid scrolling. The reason we want to avoid scrolling is that when you scroll up or down the output to select the date, it is very easy to accidentally zoom in or out the map. This is quite annoying and we would like to make our interactive map more user-friendly. However, if we make the output very big, we might have to scroll up or down the knitted page. In order to solve this, we will put the control widgets in a panel (absolutePanel()) so that the layer of the widgets is above the layer of the map and we **can drag the position panel using mouse if it blocks the markers**. 
+
+```{r}
+server_2 <- function(input, output) {
+    output$map <- renderLeaflet({
+        leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+            # since we will have different markers for different crimes, we change to a map that contains fewer colors for a better visualization
+            addProviderTiles("CartoDB.Voyager") %>%
+            setView(lng = -73.9712, lat = 40.730610, zoom = 10)
+    })
+    
+    # What we want to do here is to let the user select the types of crimes and the date of the cases they are interested in and display those related complaints cases. In order to do this, we first need to select the cases of the date the user chose
+     
+    # Create reactive expressions for the date the user chose for each type of crimes. Note the reason we do not use the input of the crime type here to slice the dataset is that for better visualization, the types of crimes shown in the ui are described in another way
+    df_react_cm <- reactive({
+        dt = selectComplaint(input$date, "CRIMINAL MISCHIEF & RELATED OF")
+    })
+
+    df_react_gl <- reactive({
+        selectComplaint(input$date,"GRAND LARCENY")
+    })
+    
+    df_react_bu <- reactive({
+        selectComplaint(input$date,"BURGLARY")
+    })
+    
+    df_react_fa <- reactive({
+        selectComplaint(input$date,"FELONY ASSAULT")
+    })
+
+    df_react_mpl <- reactive({
+        selectComplaint(input$date, "MISCELLANEOUS PENAL LAW")
+    })
+    
+    df_react_glom <- reactive({
+        selectComplaint(input$date, "GRAND LARCENY OF MOTOR VEHICLE")
+    })
+    
+    df_react_ro <- reactive({
+        selectComplaint(input$date, "ROBBERY")
+    })
+    
+    df_react_dw <- reactive({
+        selectComplaint(input$date, "DANGEROUS WEAPONS")
+    })
+    
+    # set colors of the markers for each type of crimes
+    ic_1 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "blue")
+    ic_2 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "red")
+    ic_3 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "black")
+    ic_4 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "beige")
+    ic_5 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "green")
+    ic_6 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "cadetblue")
+    ic_7 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "purple")
+    ic_8 = awesomeIcons(icon = 'ios-close',
+                        library = 'ion', markerColor = "lightgray")    
+
+    # create an observer to apply every change to the map
+    observe({
+        leafletProxy("map", data = complaint) %>%
+            clearShapes() %>%
+            clearMarkers() %>%
+            addProviderTiles("CartoDB.Voyager") %>%
+            setView(lng = -73.9712, lat = 40.730610, zoom = 10)
+      
+      # if a date is selected
+      if (input$date){
+            # if "CRIMINAL MISCHIEF & RELATED OF" is selected
+            if (input$criminal_mischief){
+                leafletProxy("map", data = df_react_cm()) %>%
+                    # add markers that are self-designed
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_1
+                    )
+            }
+            
+            # repeat for all other types of crimes
+            if (input$grand_larceny){
+                leafletProxy("map", data = df_react_gl()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_2
+                    )
+            } 
+            
+            if (input$burglary){
+                leafletProxy("map", data = df_react_bu()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_3
+                    )
+            }
+            
+            if (input$felony_assault){
+                leafletProxy("map", data = df_react_fa()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_4
+                    )
+            }
+            
+            if (input$miscellaneous_penal_law){
+                leafletProxy("map", data = df_react_mpl()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_5
+                    )
+            }
+            
+            if (input$motor_vehicle){
+                leafletProxy("map", data = df_react_glom()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_6
+                    )
+            }
+            
+            if (input$robbery){
+                leafletProxy("map", data = df_react_ro()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_7
+                    )
+            }
+            
+            if (input$dangerous_weapons){
+                leafletProxy("map", data = df_react_dw()) %>%
+                    addAwesomeMarkers(
+                        lng=~Longitude,
+                        lat=~Latitude,
+                        icon=ic_8
+                    )
+            }
+        }
+    }) }
+
+ui_2 = fluidPage(
+  leafletOutput("map", width="100%", height=620),
+  # draggable panel
+  absolutePanel(
+    # call helper functions for more details about the parameters
+    id = "choices", class = "panel panel-default",
+    top = 50, left = 25, width = 250, fixed=FALSE,
+    draggable = TRUE, height = "auto",
+    # add text 
+    tags$h1("Please Select",
+            align = "left", 
+            style = "font-size:30px"),
+    # add date selector
+    dateInput("date",
+              label = "Date",
+              value ="2020-03-01"),
+    tags$h2("Type of Crimes",
+            align = "left",style = "font-size:15px"),
+    # add checkbox
+    checkboxInput("criminal_mischief",
+            label = "criminal mischief",
+            value=FALSE),
+    checkboxInput("grand_larceny",
+            label = "grand larceny", 
+            value = FALSE),
+    checkboxInput("burglary",
+            label = "burglary", 
+            value = FALSE),
+    checkboxInput("felony_assault",
+            label = "felony assault", 
+            value = FALSE),
+    checkboxInput("miscellaneous_penal_law",
+            label = "miscellaneous penal law", 
+            value = FALSE),
+    checkboxInput("motor_vehicle",
+            label = "grand larceny of motor vehicle",
+            value = FALSE),
+    checkboxInput("robbery",
+            label = "robbery", 
+            value = FALSE),
+    checkboxInput("dangerous_weapons",
+            label = "dangerous weapons", 
+            value = FALSE),
+            style = "opacity: 0.80")
+  )
+
+shinyApp(ui_2, server_2, options = list(height = 650))
+```
+
+## 4. References
+[1] [Application layout guide](https://shiny.rstudio.com/articles/layout-guide.html)
+
+[2] [Shiny Widgets Gallery](https://shiny.rstudio.com/gallery/widget-gallery.html)
+
+[3] [R shiny cheatsheet](https://shiny.rstudio.com/images/shiny-cheatsheet.pdf)
+
+[4] [Dataset source for interactive map, complaint cases](https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Current-Year-To-Date-/5uac-w243/data)
+
+[5] [Dataset source for interactive map, geographic information](https://data.beta.nyc/dataset/pediacities-nyc-neighborhoods/resource/35dd04fb-81b3-479b-a074-a27a37888ce7)
+
+[6] [The modified dataset about complaint cases and the geographic information uploaded to GitHub](https://github.com/QianZhang-Erica/5293-Contribution)
